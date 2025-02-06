@@ -169,3 +169,6 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# lsst version file
+python/lsst/sdm_tools/version.py

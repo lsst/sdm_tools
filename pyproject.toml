@@ -1,0 +1,139 @@
+[build-system]
+requires = ["setuptools", "lsst-versions >= 1.3.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sdm_tools"
+description = "Tools for working with the Science Data Model (SDM) schemas of the Rubin Observatory"
+license = {text = "GNU General Public License v3 or later (GPLv3+)"}
+readme = "README.md"
+authors = [
+    {name="Rubin Observatory Data Management", email="dm-admin@lists.lsst.org"},
+]
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Astronomy"
+]
+keywords = ["lsst"]
+dependencies = [
+    "lsst-felis",
+    "click"
+]
+requires-python = ">=3.11.0"
+dynamic = ["version"]
+
+[project.urls]
+Source = "https://github.com/lsst-dm/sdm_tools"
+
+[project.optional-dependencies]
+test = [
+    "pytest >= 3.2"
+]
+
+[tool.setuptools.packages.find]
+where = ["python"]
+
+[tool.setuptools]
+zip-safe = true
+license-files = ["COPYRIGHT", "LICENSE"]
+
+[tool.setuptools.package-data]
+"sdm_tools" = ["py.typed"]
+
+[tool.setuptools.dynamic]
+version = { attr = "lsst_versions.get_lsst_version" }
+
+[project.scripts]
+sdm-tools = "lsst.sdm_tools.cli:cli"
+
+[tool.black]
+line-length = 110
+target-version = ["py311"]
+
+[tool.isort]
+profile = "black"
+line_length = 110
+
+[tool.lsst_versions]
+write_to = "python/lsst/sdm_tools/version.py"
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+exclude = [
+    "__init__.py",
+    "lex.py",
+    "yacc.py",
+]
+
+[tool.ruff.lint]
+ignore = [
+    "D100",
+    "D102",
+    "D104",
+    "D105",
+    "D107",
+    "D200",
+    "D203",
+    "D205",
+    "D213",
+    "D400",
+    "D413",
+    "N802",
+    "N803",
+    "N806",
+    "N812",
+    "N815",
+    "N816",
+    "N999",
+    "UP007",  # Allow UNION in type annotation
+]
+select = [
+    "E",  # pycodestyle
+    "F",  # pycodestyle
+    "N",  # pep8-naming
+    "W",  # pycodestyle
+    "D",  # pydocstyle
+    "UP",  # pyupgrade
+]
+
+[tool.pydocstyle]
+convention = "numpy"
+# Our coding style does not require docstrings for magic methods (D105)
+# Our docstyle documents __init__ at the class level (D107)
+# We allow methods to inherit docstrings and this is not compatible with D102.
+# Docstring at the very first line is not required
+# D200, D205 and D400 all complain if the first sentence of the docstring does
+# not fit on one line. We do not require docstrings in __init__ files (D104).
+add-ignore = ["D107", "D105", "D102", "D100", "D200", "D205", "D400", "D104"]
+
+[tool.ruff.lint.pycodestyle]
+max-doc-length = 79
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.numpydoc_validation]
+checks = [
+    "all",  # All except the rules listed below.
+    "SA01",  # See Also section.
+    "SA04",  # We don't use descriptions with See Also.
+    "EX01",  # Example section.
+    "SS06",  # Summary can go into second line.
+    "GL01",  # Summary text can start on same line as """
+    "GL08",  # Do not require docstring.
+    "ES01",  # No extended summary required.
+    "SS05",  # pydocstyle is better at finding infinitive verb.
+    "PR04",  # Sphinx does not require parameter type.
+]
+exclude = [
+    "^test_.*",  # Do not test docstrings in test code.
+    '^__init__$',
+    '\._[a-zA-Z_]+$',  # Private methods.
+]
