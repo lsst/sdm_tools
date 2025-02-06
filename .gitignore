@@ -169,3 +169,9 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# sconsUtils
+python/*.dist-info/
+
+# lsstsw rebuild
+_build.*
