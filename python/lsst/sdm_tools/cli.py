@@ -23,19 +23,42 @@ import zipfile
 from pathlib import Path
 
 import click
+import logging
 
 from . import __version__
 from . import build_datalink_metadata as _build_datalink_metadata
+from .band_column_checker import BandColumnChecker
 
 __all__ = ["cli"]
+
+logger = logging.getLogger("sdm_tools")
+
+loglevel_choices = list(logging._nameToLevel.keys())
 
 
 @click.group()
 @click.version_option(__version__)
+@click.option(
+    "--log-level",
+    type=click.Choice(loglevel_choices),
+    envvar="SDM_TOOLS_LOGLEVEL",
+    help="SDM Tools log level",
+    default=logging.getLevelName(logging.INFO),
+)
+@click.option(
+    "--log-file",
+    type=click.Path(),
+    envvar="SDM_TOOLS_LOGFILE",
+    help="SDM Tools log file path",
+)
 @click.pass_context
-def cli(ctx: click.Context) -> None:
+def cli(ctx: click.Context, log_level: str, log_file: str | None) -> None:
     """SDM Tools Command Line Interface"""
     ctx.ensure_object(dict)
+    if log_file:
+        logging.basicConfig(filename=log_file, level=log_level)
+    else:
+        logging.basicConfig(level=log_level)
 
 
 @cli.command("build-datalink-metadata", help="Build Datalink metadata from Felis YAML files")
@@ -75,6 +98,46 @@ def build_datalink_metadata(ctx: click.Context, files: list[str], resource_dir: 
             snippets_zip.write(snippet_file, snippet_file.name)
         for snippet_file in resource_path.glob("*.xml"):
             snippets_zip.write(snippet_file, snippet_file.name)
+
+
+def _parse_comma_separated(ctx, param, value):
+    if value:
+        return value.split(",")
+    return []
+
+
+@cli.command("check-band-columns", help="Check consistency of band column definitions")
+@click.argument("files", type=click.Path(exists=True), nargs=-1, required=True)
+@click.option("--print", "-p", "print_columns", is_flag=True, help="Print out the band columns")
+@click.option("--dump", "-d", "dump", is_flag=True, help="Dump the raw band column data")
+@click.option(
+    "--tables",
+    "-t",
+    "table_names",
+    callback=_parse_comma_separated,
+    help="Names of tables to check (comma-separated)",
+)
+@click.pass_context
+def check_band_columns(
+    ctx: click.Context,
+    files: list[str],
+    print_columns: bool = False,
+    dump: bool = False,
+    table_names: list[str] = [],
+) -> None:
+    """Build Datalink Metadata
+
+    Build a collection of configuration files for datalinker that specify the
+    principal and minimal columns for tables. This temporarily only does
+    tap:principal and we hand-maintain a columns-minimal.yaml file until we can
+    include a new key in the Felis input files.
+    """
+    checker = BandColumnChecker(files, table_names)
+    if dump:
+        checker.dump()
+    if print_columns:
+        checker.print()
+    checker.check()
 
 
 if __name__ == "__main__":
