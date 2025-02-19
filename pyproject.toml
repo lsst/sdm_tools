@@ -29,7 +29,7 @@ requires-python = ">=3.11.0"
 dynamic = ["version"]
 
 [project.urls]
-Source = "https://github.com/lsst-dm/sdm_tools"
+Source = "https://github.com/lsst/sdm_tools"
 
 [project.optional-dependencies]
 test = [
@@ -50,7 +50,7 @@ license-files = ["COPYRIGHT", "LICENSE"]
 version = { attr = "lsst_versions.get_lsst_version" }
 
 [project.scripts]
-sdm-tools = "lsst.sdm_tools.cli:cli"
+sdm-tools = "lsst.sdm.tools.cli:cli"
 
 [tool.black]
 line-length = 110
@@ -61,7 +61,7 @@ profile = "black"
 line_length = 110
 
 [tool.lsst_versions]
-write_to = "python/lsst/sdm_tools/version.py"
+write_to = "python/lsst/sdm/tools/version.py"
 
 [tool.ruff]
 line-length = 110

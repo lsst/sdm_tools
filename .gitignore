@@ -171,4 +171,4 @@ cython_debug/
 .pypirc
 
 # lsst version file
-python/lsst/sdm_tools/version.py
+python/lsst/sdm/tools/version.py

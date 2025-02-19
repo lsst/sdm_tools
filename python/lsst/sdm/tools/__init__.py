@@ -1,4 +1,4 @@
-# This file is part of sdm-tools.
+# This file is part of sdm_tools.
 #
 # Developed for the LSST Data Management System.
 # This product includes software developed by the LSST Project
