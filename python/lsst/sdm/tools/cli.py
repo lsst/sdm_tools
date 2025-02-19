@@ -23,19 +23,42 @@ import zipfile
 from pathlib import Path
 
 import click
+import logging
 
 from . import __version__
 from . import build_datalink_metadata as _build_datalink_metadata
+from .band_column_checker import BandColumnChecker, BandDiff, BANDS
 
 __all__ = ["cli"]
+
+logger = logging.getLogger("lsst.sdm.tools")
+
+loglevel_choices = list(logging._nameToLevel.keys())
 
 
 @click.group()
 @click.version_option(__version__)
+@click.option(
+    "--log-level",
+    type=click.Choice(loglevel_choices),
+    envvar="SDM_TOOLS_LOGLEVEL",
+    help="SDM Tools log level",
+    default=logging.getLevelName(logging.INFO),
+)
+@click.option(
+    "--log-file",
+    type=click.Path(),
+    envvar="SDM_TOOLS_LOGFILE",
+    help="SDM Tools log file path",
+)
 @click.pass_context
-def cli(ctx: click.Context) -> None:
+def cli(ctx: click.Context, log_level: str, log_file: str | None) -> None:
     """SDM Tools Command Line Interface"""
     ctx.ensure_object(dict)
+    if log_file:
+        logging.basicConfig(filename=log_file, level=log_level)
+    else:
+        logging.basicConfig(level=log_level)
 
 
 @cli.command("build-datalink-metadata", help="Build Datalink metadata from Felis YAML files")
@@ -75,6 +98,62 @@ def build_datalink_metadata(ctx: click.Context, files: list[str], resource_dir: 
             snippets_zip.write(snippet_file, snippet_file.name)
         for snippet_file in resource_path.glob("*.xml"):
             snippets_zip.write(snippet_file, snippet_file.name)
+
+
+def _parse_comma_separated(ctx: click.Context, param: click.Parameter, value: str) -> list[str]:
+    """Parse a comma-separated string into a list of values"""
+    if value:
+        return value.split(",")
+    return []
+
+
+@cli.command("check-band-columns", help="Check consistency of band column definitions")
+@click.argument("files", type=click.Path(exists=True), nargs=-1, required=True)
+@click.option(
+    "--tables",
+    "-t",
+    "table_names",
+    callback=_parse_comma_separated,
+    help="Names of tables to check (comma-separated)",
+)
+@click.option("--output-file", "-o", type=click.Path(), help="Output file for the diff report")
+@click.option(
+    "--reference-band",
+    "-r",
+    type=str,
+    help="Reference band for comparison (will be compared against all others)",
+    default="u",
+)
+@click.option(
+    "--error-on-differences",
+    "-e",
+    is_flag=True,
+    help="Return an error if differences are found",
+)
+@click.pass_context
+def check_band_columns(
+    ctx: click.Context,
+    files: list[str],
+    table_names: list[str] = [],
+    output_file: str | None = None,
+    reference_band: str = "u",
+    error_on_differences: bool = False,
+) -> None:
+    """Check Band Columns"""
+    if reference_band not in BANDS:
+        raise click.BadParameter(f"Reference band must be one of {BANDS}")
+    try:
+        checker = BandColumnChecker(
+            files,
+            table_names,
+            reference_column_name=reference_band,
+            output_path=output_file,
+            error_on_differences=error_on_differences,
+        )
+        checker.run()
+    except Exception as e:
+        logger.error(str(e))
+        raise click.ClickException(str(e))
 
 
 if __name__ == "__main__":
