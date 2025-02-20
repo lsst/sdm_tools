@@ -74,17 +74,6 @@ exclude = [
 
 [tool.ruff.lint]
 ignore = [
-    "D100",
-    "D102",
-    "D104",
-    "D105",
-    "D107",
-    "D200",
-    "D203",
-    "D205",
-    "D213",
-    "D400",
-    "D413",
     "N802",
     "N803",
     "N806",
@@ -92,6 +81,14 @@ ignore = [
     "N815",
     "N816",
     "N999",
+    "D107",
+    "D105",
+    "D102",
+    "D104",
+    "D100",
+    "D200",
+    "D205",
+    "D400",
     "UP007",  # Allow UNION in type annotation
 ]
 select = [
@@ -101,7 +98,25 @@ select = [
     "W",  # pycodestyle
     "D",  # pydocstyle
     "UP",  # pyupgrade
+    "I",  # isort
+    "RUF022",  # sort __all__
 ]
+# Commented out to suppress "unused noqa" in jenkins which has older ruff not
+# generating E721.
+extend-select = [
+    "RUF100", # Warn about unused noqa
+]
+
+[tool.ruff.lint.pycodestyle]
+max-doc-length = 79
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.format]
+docstring-code-format = true
+# Formatter does not know about indenting.
+docstring-code-line-length = 69
 
 [tool.pydocstyle]
 convention = "numpy"
@@ -112,12 +127,6 @@ convention = "numpy"
 # D200, D205 and D400 all complain if the first sentence of the docstring does
 # not fit on one line. We do not require docstrings in __init__ files (D104).
 add-ignore = ["D107", "D105", "D102", "D100", "D200", "D205", "D400", "D104"]
-
-[tool.ruff.lint.pycodestyle]
-max-doc-length = 79
-
-[tool.ruff.lint.pydocstyle]
-convention = "numpy"
 
 [tool.numpydoc_validation]
 checks = [
