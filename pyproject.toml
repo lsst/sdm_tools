@@ -3,7 +3,7 @@ requires = ["setuptools", "lsst-versions >= 1.3.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "sdm_tools"
+name = "lsst-sdm-tools"
 description = "Tools for working with the Science Data Model (SDM) schemas of the Rubin Observatory"
 license = {text = "GNU General Public License v3 or later (GPLv3+)"}
 readme = "README.md"
