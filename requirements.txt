@@ -1,0 +1,4 @@
+lsst-felis @ git+https://github.com/lsst/felis@main
+lsst-utils @ git+https://github.com/lsst/utils@main
+click
+pyyaml
