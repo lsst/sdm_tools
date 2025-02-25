@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import logging
 import zipfile
 from pathlib import Path
 
@@ -28,13 +29,34 @@ from . import __version__, _build_datalink_metadata
 
 __all__ = ["cli"]
 
+logger = logging.getLogger("lsst.sdm.tools")
+
+loglevel_choices = list(logging._nameToLevel.keys())
+
 
 @click.group()
 @click.version_option(__version__)
+@click.option(
+    "--log-level",
+    type=click.Choice(loglevel_choices),
+    envvar="SDM_TOOLS_LOGLEVEL",
+    help="SDM Tools log level (DEFAULT: INFO)",
+    default=logging.getLevelName(logging.INFO),
+)
+@click.option(
+    "--log-file",
+    type=click.Path(),
+    envvar="SDM_TOOLS_LOGFILE",
+    help="SDM Tools log file path",
+)
 @click.pass_context
-def cli(ctx: click.Context) -> None:
+def cli(ctx: click.Context, log_level: str, log_file: str | None) -> None:
     """SDM Tools Command Line Interface"""
     ctx.ensure_object(dict)
+    if log_file:
+        logging.basicConfig(filename=log_file, level=log_level)
+    else:
+        logging.basicConfig(level=log_level)
 
 
 @cli.command("build-datalink-metadata", help="Build Datalink metadata from Felis YAML files")
