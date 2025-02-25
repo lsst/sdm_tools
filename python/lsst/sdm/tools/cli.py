@@ -26,7 +26,7 @@ from pathlib import Path
 import click
 
 from . import __version__, _build_datalink_metadata
-from ._band_column_checker import BANDS, BandColumnChecker
+from ._band_column_checker import BANDS, BandColumnChecker, SchemaBandColumnComparator
 
 __all__ = ["cli"]
 
@@ -106,7 +106,7 @@ def _parse_comma_separated(ctx: click.Context, param: click.Parameter, value: st
     return []
 
 
-@cli.command("check-band-columns", help="Check consistency of band column definitions")
+@cli.command("check-band-columns", help="Check consistency of band column definitions within a schema")
 @click.argument("files", type=click.Path(exists=True), nargs=-1, required=True)
 @click.option(
     "--tables",
@@ -146,6 +146,55 @@ def check_band_columns(
             files,
             table_names,
             reference_column_name=reference_band,
+            output_path=output_file,
+            error_on_differences=error_on_differences,
+        )
+        checker.run()
+    except Exception as e:
+        logger.error(str(e))
+        raise click.ClickException(str(e))
+
+
+@cli.command("compare-band-columns", help="Compare band column definitions between schemas")
+@click.argument("files", type=click.Path(exists=True), nargs=2, required=True)
+@click.option(
+    "--tables",
+    "-t",
+    "table_names",
+    callback=_parse_comma_separated,
+    help="Names of tables to check (comma-separated)",
+)
+@click.option("--output-file", "-o", type=click.Path(), help="Output file for the diff report")
+@click.option(
+    "--bands",
+    "-b",
+    help="Comma-separated list of bands to compare (DEFAULT: all bands)",
+    callback=_parse_comma_separated,
+    default=",".join(BANDS),
+)
+@click.option(
+    "--error-on-differences",
+    "-e",
+    is_flag=True,
+    help="Return an error if differences are found",
+)
+@click.pass_context
+def compare_band_columns(
+    ctx: click.Context,
+    files: list[str],
+    table_names: list[str] = [],
+    output_file: str | None = None,
+    bands: list[str] = list(BANDS),
+    error_on_differences: bool = False,
+) -> None:
+    """Check Band Columns"""
+    if len(bands) == 0:
+        raise click.BadParameter("At least one band must be specified")
+    try:
+        checker = SchemaBandColumnComparator(
+            files,
+            table_names,
+            bands=bands,
             output_path=output_file,
             error_on_differences=error_on_differences,
         )

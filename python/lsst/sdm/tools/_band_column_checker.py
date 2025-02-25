@@ -1,4 +1,6 @@
-"""Check consistency of band column definitions."""
+"""Tools for checking consistency of band column definitions within a single
+table, as well as comparing them across different schemas.
+"""
 
 # This file is part of sdm_tools.
 #
@@ -397,4 +399,60 @@ class BandColumnChecker:
             print(json.dumps(band_report.to_json(), indent=2))
 
         if self.error_on_differences and len(band_report.band_diffs) > 0:
+            raise ValueError("Band column differences found")
+
+
+class SchemaBandColumnComparator(BandColumnChecker):
+    """Compare band columns between two schemas."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        if "bands" in kwargs:
+            self.bands = kwargs.pop("bands")
+        else:
+            self.bands = BANDS
+        super().__init__(*args, **kwargs)
+
+    def _compare_schemas(self) -> dict[str, Any]:
+        schemas = list(self.schemas.values())
+        reference_schema = schemas[0]
+        compare_schema = schemas[1]
+        results: dict[str, Any] = {}
+        results["reference_schema"] = schemas[0].name
+        results["compare_schema"] = schemas[1].name
+        results["differences"] = {}
+        logger.info(f"Comparing schemas: {reference_schema.name} and {compare_schema.name}")
+        reference_tables = self.band_columns[reference_schema.name]
+        compare_tables = self.band_columns[compare_schema.name]
+        for table_name in reference_tables.keys():
+            if table_name in compare_tables and self._should_check_table(table_name):
+                logger.info(f"Comparing table: {table_name}")
+                reference_columns = reference_tables[table_name]
+                compare_columns = compare_tables[table_name]
+                self._filter_band_columns(reference_columns, compare_columns)
+                diff = DeepDiff(reference_columns, compare_columns, ignore_order=True)
+                if diff:
+                    results["differences"][table_name] = diff
+        return results if results["differences"] else {}
+
+    def _filter_band_columns(
+        self, reference_columns: dict[str, Any], compare_columns: dict[str, Any]
+    ) -> None:
+        reference_keys_to_remove = [key for key in reference_columns.keys() if key not in self.bands]
+        compare_keys_to_remove = [key for key in compare_columns.keys() if key not in self.bands]
+        for key in reference_keys_to_remove:
+            reference_columns.pop(key)
+        for key in compare_keys_to_remove:
+            compare_columns.pop(key)
+
+    def run(self) -> None:
+        results = self._compare_schemas()
+
+        if self.output_path:
+            with open(self.output_path, "w") as stream:
+                json.dump(results, stream, indent=2)
+                logger.info(f"Band column differences written to: {self.output_path}")
+        else:
+            print(json.dumps(results, indent=2))
+
+        if self.error_on_differences and len(results) > 0:
             raise ValueError("Band column differences found")
