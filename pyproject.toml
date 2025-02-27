@@ -183,7 +183,7 @@ checks = [
 ]
 exclude = [
     "^test_.*",  # Do not test docstrings in test code.
-    'lsst.sdm.tools.cli$',  # This is the main click command
+    '^cli', # This is the main click command
     '^__init__$',
     '\._[a-zA-Z_]+$',  # Private methods.
 ]
