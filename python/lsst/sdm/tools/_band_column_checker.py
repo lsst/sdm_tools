@@ -317,7 +317,7 @@ class BandColumnChecker:
         schemas: dict[str, Schema] = {}
         for file in files:
             with open(file) as schema_file:
-                schema = Schema.from_stream(schema_file)
+                schema = Schema.from_stream(schema_file, context={"id_generation": True})
                 if schema.name in schemas:
                     raise ValueError(f"Duplicate schema name: {schema.name}")
                 schemas[schema.name] = schema
