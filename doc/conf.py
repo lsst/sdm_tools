@@ -9,3 +9,10 @@ exclude_patterns = ["changes/*"]
 
 intersphinx_mapping["lsst"] = ("https://pipelines.lsst.io/v/weekly/", None)  # noqa: F405
 intersphinx_mapping["pydantic"] = ("https://docs.pydantic.dev/latest/", None)  # noqa: F405
+
+# As a temporary hack until we move to documenteer 2 delete scipy
+# (since it no longer works)
+try:
+    del intersphinx_mapping["scipy"]  # noqa: F405
+except KeyError:
+    pass
