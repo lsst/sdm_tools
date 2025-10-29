@@ -5,19 +5,20 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "lsst-sdm-tools"
 description = "Tools for working with the Science Data Model (SDM) schemas of the Rubin Observatory"
-license = {text = "BSD 3-Clause License"}
+license = "BSD-3-Clause"
+license-files = ["COPYRIGHT", "LICENSE"]
 readme = "README.md"
 authors = [
     {name="Rubin Observatory Data Management", email="dm-admin@lists.lsst.org"},
 ]
 classifiers = [
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering :: Astronomy"
 ]
 keywords = ["lsst"]
@@ -43,7 +44,6 @@ where = ["python"]
 
 [tool.setuptools]
 zip-safe = true
-license-files = ["COPYRIGHT", "LICENSE"]
 
 [tool.setuptools.package-data]
 "lsst.sdm.tools" = ["py.typed"]
