@@ -24,6 +24,7 @@ import zipfile
 from pathlib import Path
 
 import click
+from felis import Schema
 
 from . import __version__, _build_datalink_metadata
 from ._band_column_checker import BANDS, BandColumnChecker, SchemaBandColumnComparator
@@ -110,7 +111,13 @@ def build_datalink_metadata(ctx: click.Context, files: list[str], resource_dir: 
         data_path = Path(resource_dir)
 
         paths = [Path(file) for file in files]
-        _build_datalink_metadata.process_files(paths, Path(data_path / "columns-principal.yaml"))
+
+        schemas: list[Schema] = []
+        for path in paths:
+            schema = Schema.from_uri(path, context={"id_generation": True})
+            schemas.append(schema)
+
+        _build_datalink_metadata.process_schemas(schemas, Path(data_path / "columns-principal.yaml"))
 
         zip_path = Path(zip_dir)
         with zipfile.ZipFile(zip_path / "datalink-columns.zip", "w") as columns_zip:
