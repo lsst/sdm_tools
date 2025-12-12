@@ -31,14 +31,14 @@ from __future__ import annotations
 import sys
 from collections import defaultdict
 from pathlib import Path
-from typing import Any
 
 import yaml
+from felis import Schema, Table
 
-__all__: list[str] = []
+__all__ = ["process_schemas"]
 
 
-def filter_columns(table: dict[str, Any], filter_key: str) -> list[str]:
+def filter_columns(table: Table, filter_key: str) -> list[str]:
     """Find the columns for a table with a given key.
 
     This respects the TAP v1.1 convention for ordering of columns.  All
@@ -47,8 +47,8 @@ def filter_columns(table: dict[str, Any], filter_key: str) -> list[str]:
 
     Parameters
     ----------
-    table : Dict[`str`, Any]
-        Felis definition of a table.
+    table : `~felis.Table`
+        Felis table object to search.
     filter_key : `str`
         Felis key to use to find columns of interest.  For example, use
         ``tap:principal`` to find principal columns.
@@ -56,51 +56,53 @@ def filter_columns(table: dict[str, Any], filter_key: str) -> list[str]:
     Returns
     -------
     columns : `list` [ `str` ]
-        List of filtered columns in sorted order.
+        List of filtered column names in sorted order.
     """
     principal = []
     unknown_column_index = 100000000
-    for column in table["columns"]:
-        if column.get(filter_key):
-            column_index = column.get("tap:column_index", unknown_column_index)
+    for column in table.columns:
+        if getattr(column, filter_key.replace(":", "_")):  # e.g., tap:principal -> tap_principal
+            column_index = column.tap_column_index or unknown_column_index
             unknown_column_index += 1
-            principal.append((column["name"], column_index))
+            principal.append((column.name, column_index))
     return [c[0] for c in sorted(principal, key=lambda c: c[1])]
 
 
-def build_columns(felis: dict[str, Any], column_properties: list[str]) -> dict[str, dict[str, list[str]]]:
-    """Find the list of tables with a particular Felis property.
+def build_columns(schema: Schema, column_properties: list[str]) -> dict[str, dict[str, list[str]]]:
+    """Find the columns with particular Felis properties for all tables in a
+    schema.
 
     Parameters
     ----------
-    felis : Dict[`str`, Any]
-        The parsed Felis YAML.
-    column_properties : `str`
+    schema : `~felis.Schema`
+        The Felis schema to search.
+    column_properties : `list` [ `str` ]
         The column properties to search for.
 
     Returns
     -------
-    output : Dict[`str`, Dict[`str`, List[`str`]])
-        A dictionary of tables and their columns.
+    output : `dict` [ `str`, `dict` [ `str`, `list` [ `str` ] ] ]
+        A dictionary mapping qualified table names to their filtered columns.
+        The structure is {"schema.table": {"property": ["col1", "col2"]}}.
     """
-    schema = felis["name"]
+    schema_name = schema.name
     output: dict[str, dict[str, list[str]]] = defaultdict(dict)
-    for table in felis["tables"]:
-        name = table["name"]
-        full_name = f"{schema}.{name}"
+    for table in schema.tables:
+        name = table.name
+        full_name = f"{schema_name}.{name}"
         for column_property in column_properties:
             columns = filter_columns(table, column_property)
             output[full_name][column_property] = columns
     return output
 
 
-def process_files(files: list[Path], output_path: Path | None = None) -> None:
-    """Process a set of Felis input files and print output to standard out.
+def process_schemas(schemas: list[Schema], output_path: Path | None = None) -> None:
+    """Process a set of Felis schemas and output DataLink metadata.
 
     Parameters
     ----------
-    files : List[`pathlib.Path`]
-        List of input files.
+    schemas : `list` [ `~felis.Schema` ]
+        List of Felis schema objects to process.
     output_path : `pathlib.Path`, optional
         Output file to write to.  If not provided, output will be written to
         standard out.
@@ -118,10 +120,8 @@ def process_files(files: list[Path], output_path: Path | None = None) -> None:
              - ccdVisitId
     """
     tables = {}
-    for input_file in files:
-        with input_file.open("r") as fh:
-            felis = yaml.safe_load(fh)
-        tables.update(build_columns(felis, ["tap:principal"]))
+    for schema in schemas:
+        tables.update(build_columns(schema, ["tap:principal"]))
 
     # Dump the result to the output stream.
     if output_path is None:
