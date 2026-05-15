@@ -278,14 +278,14 @@ class BandColumnChecker:
 
     def __init__(
         self,
-        files: list[str],
+        schemas: dict[str, Schema],
         table_names: list[str],
         reference_band: str = "u",
         output_path: str | None = None,
         error_on_differences: bool = False,
         ignore_description: bool = False,
     ) -> None:
-        self.files = files
+        self.schemas = schemas
         self.table_names = table_names
         self.reference_band = reference_band
         self.output_path = output_path
@@ -293,7 +293,6 @@ class BandColumnChecker:
         self.ignore_description = ignore_description
         if len(self.table_names) > 0:
             logger.debug(f"Checking tables: {self.table_names}")
-        self.schemas: dict[str, Schema] = self._load_schemas(files)
         self._band_dict = self._create_band_columns()
 
     def _diff(
@@ -311,17 +310,6 @@ class BandColumnChecker:
     ) -> dict[str, Any]:
         """Diff two columns."""
         return DeepDiff(reference_column, comparison_column, ignore_order=True, exclude_paths="root['id']")
-
-    def _load_schemas(self, files: list[str]) -> dict[str, Schema]:
-        """Load schemas from a list of files."""
-        schemas: dict[str, Schema] = {}
-        for file in files:
-            with open(file) as schema_file:
-                schema = Schema.from_stream(schema_file, context={"id_generation": True})
-                if schema.name in schemas:
-                    raise ValueError(f"Duplicate schema name: {schema.name}")
-                schemas[schema.name] = schema
-        return schemas
 
     @property
     def band_columns(self) -> dict[str, Any]:
