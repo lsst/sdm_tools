@@ -281,7 +281,10 @@ def compare_band_columns(
     if len(bands) == 0:
         raise click.BadParameter("At least one band must be specified")
     try:
-        schemas = _load_schemas(uris)
+        # We need to build the schemas without the mapping because this tool
+        # may encounter duplicate schema names, e.g., 'ivoa'.
+        schemas = [Schema.from_uri(uri, context={"id_generation": True}) for uri in uris]
+
         checker = SchemaBandColumnComparator(
             schemas,
             table_names,
