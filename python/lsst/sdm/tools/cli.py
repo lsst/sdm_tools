@@ -98,7 +98,7 @@ def cli(ctx: click.Context, log_level: str, log_file: str | None) -> None:
 
 
 @cli.command("build-datalink-metadata", help="Build Datalink metadata from Felis YAML files")
-@click.argument("uris", type=click.Path(exists=True), nargs=-1, required=True)
+@click.argument("uris", type=str, nargs=-1, required=True)
 @click.option(
     "--resource-dir",
     type=click.Path(exists=True, file_okay=False),
@@ -123,7 +123,9 @@ def build_datalink_metadata(ctx: click.Context, uris: list[str], resource_dir: s
     try:
         data_path = Path(resource_dir)
 
-        schemas = list(_load_schemas(uris).values())
+        # We need to load this without the mapping, because duplicate schema
+        # names may be encountered, e.g., 'ivoa'.
+        schemas = [Schema.from_uri(uri, context={"id_generation": True}) for uri in uris]
 
         _build_datalink_metadata.process_schemas(schemas, Path(data_path / "columns-principal.yaml"))
 
