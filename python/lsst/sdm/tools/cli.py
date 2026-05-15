@@ -61,6 +61,19 @@ def _setup_logger(log_level: str, log_file: str | None) -> None:
     _logger.addHandler(handler)
 
 
+def _load_schemas(uris: list[str]) -> dict[str, Schema]:
+    """Load schemas from a list of URIs and return a dictionary mapping schema
+    names to Schema objects. Duplicate names are not allowed.
+    """
+    schemas: dict[str, Schema] = {}
+    for uri in uris:
+        schema = Schema.from_uri(uri, context={"id_generation": True})
+        if schema.name in schemas:
+            raise ValueError(f"Duplicate schema name: {schema.name}")
+        schemas[schema.name] = schema
+    return schemas
+
+
 @click.group()
 @click.version_option(__version__)
 @click.option(
@@ -99,7 +112,7 @@ def cli(ctx: click.Context, log_level: str, log_file: str | None) -> None:
     help="Directory to write zip files (DEFAULT: current directory)",
 )
 @click.pass_context
-def build_datalink_metadata(ctx: click.Context, files: list[str], resource_dir: str, zip_dir: str) -> None:
+def build_datalink_metadata(ctx: click.Context, uris: list[str], resource_dir: str, zip_dir: str) -> None:
     """Build Datalink Metadata
 
     Build a collection of configuration files for datalinker that specify the
@@ -110,12 +123,7 @@ def build_datalink_metadata(ctx: click.Context, files: list[str], resource_dir: 
     try:
         data_path = Path(resource_dir)
 
-        paths = [Path(file) for file in files]
-
-        schemas: list[Schema] = []
-        for path in paths:
-            schema = Schema.from_uri(path, context={"id_generation": True})
-            schemas.append(schema)
+        schemas = list(_load_schemas(uris).values())
 
         _build_datalink_metadata.process_schemas(schemas, Path(data_path / "columns-principal.yaml"))
 
@@ -156,7 +164,7 @@ def _parse_comma_separated(ctx: click.Context, param: click.Parameter, value: st
       sdm-tools check-band-columns schema1.yaml schema2.yaml -t table1 -o diff_report.json -e
     """,
 )
-@click.argument("files", type=click.Path(exists=True), nargs=-1, required=True)
+@click.argument("uris", type=click.Path(exists=True), nargs=-1, required=True)
 @click.option(
     "--tables",
     "-t",
@@ -187,7 +195,7 @@ def _parse_comma_separated(ctx: click.Context, param: click.Parameter, value: st
 @click.pass_context
 def check_band_columns(
     ctx: click.Context,
-    files: list[str],
+    uris: list[str],
     table_names: list[str] = [],
     output_file: str | None = None,
     reference_band: str = "u",
@@ -199,8 +207,9 @@ def check_band_columns(
         raise click.BadParameter(f"Reference band must be one of {BANDS}")
     try:
         logger.info("Reference band: %s", reference_band)
+        schemas = _load_schemas(uris)
         checker = BandColumnChecker(
-            files,
+            schemas,
             table_names,
             reference_band=reference_band,
             output_path=output_file,
@@ -261,7 +270,7 @@ def check_band_columns(
 @click.pass_context
 def compare_band_columns(
     ctx: click.Context,
-    files: list[str],
+    uris: list[str],
     table_names: list[str] = [],
     output_file: str | None = None,
     bands: list[str] = list(BANDS),
@@ -272,8 +281,9 @@ def compare_band_columns(
     if len(bands) == 0:
         raise click.BadParameter("At least one band must be specified")
     try:
+        schemas = _load_schemas(uris)
         checker = SchemaBandColumnComparator(
-            files,
+            schemas,
             table_names,
             bands=bands,
             output_path=output_file,

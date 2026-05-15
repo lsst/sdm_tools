@@ -1,0 +1,1 @@
+Add support to the command line interface for loading schemas from URIs.

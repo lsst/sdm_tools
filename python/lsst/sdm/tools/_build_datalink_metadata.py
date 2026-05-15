@@ -47,9 +47,9 @@ def filter_columns(table: Table, filter_key: str) -> list[str]:
 
     Parameters
     ----------
-    table : `~felis.Table`
+    table
         Felis table object to search.
-    filter_key : `str`
+    filter_key
         Felis key to use to find columns of interest.  For example, use
         ``tap:principal`` to find principal columns.
 
@@ -74,9 +74,9 @@ def build_columns(schema: Schema, column_properties: list[str]) -> dict[str, dic
 
     Parameters
     ----------
-    schema : `~felis.Schema`
+    schema
         The Felis schema to search.
-    column_properties : `list` [ `str` ]
+    column_properties
         The column properties to search for.
 
     Returns
@@ -101,9 +101,9 @@ def process_schemas(schemas: list[Schema], output_path: Path | None = None) -> N
 
     Parameters
     ----------
-    schemas : `list` [ `~felis.Schema` ]
+    schemas
         List of Felis schema objects to process.
-    output_path : `pathlib.Path`, optional
+    output_path
         Output file to write to.  If not provided, output will be written to
         standard out.
 
