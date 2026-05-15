@@ -52,9 +52,9 @@ class ParsedDeepDiffKey:
 
     Parameters
     ----------
-    index : int
+    index
         The index of the column in the list of columns.
-    field_name : str
+    field_name
         The name of the field in the column (or None if there is no field
         name).
     """
@@ -70,7 +70,7 @@ class ParsedDeepDiffKey:
 
         Parameters
         ----------
-        diff_entry : str
+        diff_entry
             The DeepDiff entry string, e.g., "root[1]" or
             "root[1]['fieldname']".
 
@@ -99,9 +99,9 @@ def _remap_keys(diff: dict[str, Any], key_map: dict[str, str]) -> None:
 
     Parameters
     ----------
-    diff : dict
+    diff
         The dictionary containing the diff.
-    key_map : dict
+    key_map
         A dictionary mapping old keys to new keys.
     """
     for old_key, new_key in key_map.items():
@@ -114,11 +114,11 @@ class DiffFormatter:
 
     Parameters
     ----------
-    diff : dict[str, Any]
+    diff
         The DeepDiff dictionary.
-    reference_columns : list[dict[str, Any]]
+    reference_columns
         The reference columns.
-    comparison_columns : list[dict[str, Any]]
+    comparison_columns
         The columns to compare against the reference columns.
     """
 
@@ -232,13 +232,13 @@ class BandComparisonReport:
 
         Parameters
         ----------
-        schema_name : str
+        schema_name
             The name of the schema.
-        table_name : str
+        table_name
             The name of the table.
-        band : str
+        band
             The band name.
-        diff : dict[str, Any]
+        diff
             The diff dictionary.
         """
         self.data.setdefault(schema_name, {}).setdefault(table_name, {}).setdefault(band, []).append(diff)
@@ -248,7 +248,7 @@ class BandComparisonReport:
 
         Parameters
         ----------
-        output_path : str
+        output_path
             The path to write the output JSON file.
         """
         with open(output_path, "w") as stream:
@@ -261,18 +261,18 @@ class BandColumnChecker:
 
     Parameters
     ----------
-    files : list[str]
+    files
         List of schema files to check.
-    table_names : list[str]
+    table_names
         List of table names to check. If empty, all tables are checked.
-    reference_band : str
+    reference_band
         The band column to use as the reference for comparison.
-    output_path : str | None
+    output_path
         The path to write the output JSON file. If None, the output is printed
         to stdout.
-    error_on_differences : bool
+    error_on_differences
         Raise an error if differences are found.
-    ignore_description : bool
+    ignore_description
         Ignore differences in column descriptions.
     """
 
@@ -484,9 +484,9 @@ class SchemaBandColumnComparator(BandColumnChecker):
 
     Parameters
     ----------
-    *args : Any
+    *args
         Positional arguments.
-    **kwargs : Any
+    **kwargs
         Keyword arguments.
     """
 
