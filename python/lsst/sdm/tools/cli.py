@@ -98,7 +98,7 @@ def cli(ctx: click.Context, log_level: str, log_file: str | None) -> None:
 
 
 @cli.command("build-datalink-metadata", help="Build Datalink metadata from Felis YAML files")
-@click.argument("files", type=click.Path(exists=True), nargs=-1, required=True)
+@click.argument("uris", type=click.Path(exists=True), nargs=-1, required=True)
 @click.option(
     "--resource-dir",
     type=click.Path(exists=True, file_okay=False),
@@ -239,7 +239,7 @@ def check_band_columns(
       sdm-tools compare-band-columns reference_schema.yaml comparison_schema.yaml
     """,
 )
-@click.argument("files", type=click.Path(exists=True), nargs=2, required=True)
+@click.argument("uris", type=click.Path(exists=True), nargs=2, required=True)
 @click.option(
     "--tables",
     "-t",
